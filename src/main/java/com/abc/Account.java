@@ -1,6 +1,7 @@
 package com.abc;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class Account {
@@ -17,6 +18,16 @@ public class Account {
         this.transactions = new ArrayList<Transaction>();
     }
 
+    public void transferTo(Account another, double amount) {
+    	if (amount <= 0) {
+    		throw new IllegalArgumentException("amount must be greater than zero");
+    	}
+    	else {
+    		this.transactions.add(new Transaction(-amount));
+    		another.transactions.add(new Transaction(amount));
+    	}
+    }
+    
     public void deposit(double amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("amount must be greater than zero");
@@ -33,7 +44,7 @@ public void withdraw(double amount) {
     }
 }
 
-    public double interestEarned() {
+    public double annualInterestEarned() {
         double amount = sumTransactions();
         switch(accountType){
             case SAVINGS:
@@ -45,16 +56,31 @@ public void withdraw(double amount) {
 //                if (amount <= 4000)
 //                    return 20;
             case MAXI_SAVINGS:
+            	/*
                 if (amount <= 1000)
                     return amount * 0.02;
                 if (amount <= 2000)
                     return 20 + (amount-1000) * 0.05;
                 return 70 + (amount-2000) * 0.1;
+                */
+            	
+            	Date now = DateProvider.getInstance().now();
+            	if (transactions.isEmpty()) return amount * 0.05;
+            	for (Transaction t:transactions) {
+            		if ((t.amount < 0) && (now.getTime() - t.getTransactionDate().getTime() < 10*24*60*60*1000)){
+                    		return amount * 0.001;
+            		}
+            	}
+            	return amount * 0.05;
             default:
                 return amount * 0.001;
         }
     }
 
+    public double dailyInterestEarned() {
+		return annualInterestEarned() / (DateProvider.isLeap()?366:365);
+    }
+    
     public double sumTransactions() {
        return checkIfTransactionsExist(true);
     }
